@@ -90,21 +90,46 @@ Reproducing Locally
 RPC="https://atlantic.dplabs-internal.com"
 USDC="0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B"
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_chainId\",\"params\":[],\"id\":1}" $RPC
+ Reproducing Locally
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":2}" $RPC
+The following commands use direct JSON-RPC via `curl` on Pharos Atlantic Testnet. This is not Chain MCP.
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x06fdde03\"},\"latest\"],\"id\":3}" $RPC
+```bash
+RPC="https://atlantic.dplabs-internal.com"
+USDC="0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B"
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x95d89b41\"},\"latest\"],\"id\":4}" $RPC
+# Verify chain ID
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x313ce567\"},\"latest\"],\"id\":5}" $RPC
+# Read latest block number
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":2}'
 
-curl -s -X POST -H "Content-Type: application/json" \
-  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x18160ddd\"},\"latest\"],\"id\":6}" $RPC
-Decode the returned hex with any ABI decoder (Foundry cast abi-decode, ethers.js AbiCoder, or an online decoder) using the signatures shown above.
+# Read token name
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x06fdde03\"},\"latest\"],\"id\":3}"
+
+# Read token symbol
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x95d89b41\"},\"latest\"],\"id\":4}"
+
+# Read token decimals
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x313ce567\"},\"latest\"],\"id\":5}"
+
+# Read total supply
+curl -s -X POST "$RPC" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x18160ddd\"},\"latest\"],\"id\":6}"
+```
+
+These commands return raw JSON-RPC responses. Decode the ABI results to obtain human-readable values. `totalSupply` is divided by 10^6 because the token reports 6 decimals.
+
+Method disclosure: These commands use direct JSON-RPC over HTTPS, not Chain MCP.
+
