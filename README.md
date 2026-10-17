@@ -1,58 +1,110 @@
-# Pharos Read Contract State
+Pharos Read Contract State — Sample Output
+Method label: Direct JSON-RPC via curl (NOT Chain MCP). This sample was produced by sending raw eth_call / eth_blockNumber / eth_chainId JSON-RPC requests to the Pharos Atlantic Testnet RPC endpoint. No MCP server was registered or used in this session.
 
-## Overview
+Target
+Field	Value
+Network	Pharos Atlantic Testnet
+Chain ID	688689 (0xa8231)
+RPC URL	https://atlantic.dplabs-internal.com
+Contract	USDC 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B
+Reference block	31529560 (0x1e11a58)
+Explorer	https://atlantic.pharosscan.xyz/address/0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B
+Chain & Block Verification
+eth_chainId
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+  https://atlantic.dplabs-internal.com
+Response:
 
-This project reads publicly accessible state values from a USDC token contract on the Pharos Atlantic Testnet.
+{"jsonrpc":"2.0","id":1,"result":"0xa8231"}
+Decoded: 0xa8231 = 688689 ✅ matches Atlantic Testnet.
 
-## Network Details
+eth_blockNumber
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":2}' \
+  https://atlantic.dplabs-internal.com
+Response:
 
-* Network: Pharos Atlantic Testnet
-* Chain ID: 688689
-* Contract Address: `0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B`
-* Block Number: `31508327`
+{"result":"0x1e11a58","id":2,"jsonrpc":"2.0"}
+Decoded: 0x1e11a58 = 31,529,560.
 
-## Contract Values
+Contract Reads (ERC-20 public values)
+All four calls use eth_call with "latest" block tag against to: 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B.
 
-| Method          | Result          |
-| --------------- | --------------- |
-| `name()`        | USDC            |
-| `symbol()`      | USDC            |
-| `decimals()`    | 6               |
-| `totalSupply()` | 100108137767829 |
+1. name() — selector 0x06fdde03
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B","data":"0x06fdde03"},"latest"],"id":3}' \
+  https://atlantic.dplabs-internal.com
+Raw result:
 
-The raw total supply is approximately 100,108.14 USDC after applying 6 decimals.
+0x0000000000000000000000000000000000000000000000000000000000000020
+0000000000000000000000000000000000000000000000000000000000000004
+5553444300000000000000000000000000000000000000000000000000000000
+Decoded (ABI: string): offset = 0x20, length = 4, bytes = 55 53 44 43 → USDC.
 
-## How to Run
+2. symbol() — selector 0x95d89b41
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B","data":"0x95d89b41"},"latest"],"id":4}' \
+  https://atlantic.dplabs-internal.com
+Raw result:
 
-The contract state was read using the Pharos Atlantic Testnet RPC endpoint and the `cast call` tool.
+0x0000000000000000000000000000000000000000000000000000000000000020
+0000000000000000000000000000000000000000000000000000000000000004
+5553444300000000000000000000000000000000000000000000000000000000
+Decoded (ABI: string): → USDC.
 
-Example commands:
+3. decimals() — selector 0x313ce567
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B","data":"0x313ce567"},"latest"],"id":5}' \
+  https://atlantic.dplabs-internal.com
+Raw result:
 
-```bash
-cast call 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B "name()(string)" --rpc-url https://atlantic.dplabs-internal.com
+0x0000000000000000000000000000000000000000000000000000000000000006
+Decoded (ABI: uint8): → 6.
 
-cast call 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B "symbol()(string)" --rpc-url https://atlantic.dplabs-internal.com
+4. totalSupply() — selector 0x18160ddd
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B","data":"0x18160ddd"},"latest"],"id":6}' \
+  https://atlantic.dplabs-internal.com
+Raw result:
 
-cast call 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B "decimals()(uint8)" --rpc-url https://atlantic.dplabs-internal.com
+0x00000000000000000000000000000000000000000000000000005b0c40615d25
+Decoded (ABI: uint256):
 
-cast call 0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B "totalSupply()(uint256)" --rpc-url https://atlantic.dplabs-internal.com
-```
+Raw integer: 0x5b0c40615d25 = 100,108,177,857,829
+Human-readable (÷ 10⁶, since decimals = 6): 100,108,177.857829 USDC
+Summary Table
+#	Function	Selector	Raw hex	Decoded value
+1	name()	0x06fdde03	0x20…55534443…	USDC
+2	symbol()	0x95d89b41	0x20…55534443…	USDC
+3	decimals()	0x313ce567	0x06	6
+4	totalSupply()	0x18160ddd	0x5b0c40615d25	100,108,177,857,829 raw → 100,108,177.857829 USDC
+Block number: 31,529,560 (0x1e11a58) Chain ID: 688689 (0xa8231) — Atlantic Testnet ✅
 
-## Sample Output
+Method Disclosure
+Transport: HTTPS POST, JSON-RPC 2.0.
+Tool: curl issuing raw eth_call, eth_blockNumber, eth_chainId requests.
+NOT Chain MCP: No MCP server was registered in this session (MCP tools: 0). The mcp:chain:* tool surface was unavailable, so this sample was produced entirely via direct JSON-RPC against the public Atlantic Testnet RPC endpoint.
+No private keys, no write operations. All calls are read-only and stateless; they do not mutate chain state and require no authentication.
+Reproducing Locally
+RPC="https://atlantic.dplabs-internal.com"
+USDC="0xcfC8330f4BCAB529c625D12781b1C19466A9Fc8B"
 
-```text
-Network: Pharos Atlantic Testnet
-Block Number: 31508327
-Token Name: USDC
-Token Symbol: USDC
-Token Decimals: 6
-Raw Total Supply: 100108137767829
-Human-Readable Total Supply: approximately 100108.14 USDC
-```
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_chainId\",\"params\":[],\"id\":1}" $RPC
 
-## Notes
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":2}" $RPC
 
-The values above are from a previous read and may change. Re-run the calls to obtain current results.
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x06fdde03\"},\"latest\"],\"id\":3}" $RPC
 
-**Important:** This documents direct RPC reads using `cast call`. Chain MCP execution must be verified separately to satisfy the task requirement.
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x95d89b41\"},\"latest\"],\"id\":4}" $RPC
 
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x313ce567\"},\"latest\"],\"id\":5}" $RPC
+
+curl -s -X POST -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$USDC\",\"data\":\"0x18160ddd\"},\"latest\"],\"id\":6}" $RPC
+Decode the returned hex with any ABI decoder (Foundry cast abi-decode, ethers.js AbiCoder, or an online decoder) using the signatures shown above.
